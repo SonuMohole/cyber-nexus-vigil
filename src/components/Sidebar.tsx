@@ -1,9 +1,10 @@
-import { Home, DollarSign, MessageSquare, Globe, Shield, LogOut } from "lucide-react";
+import { Home, DollarSign, MessageSquare, Globe, Shield, LogOut, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", icon: Home, path: "/dashboard" },
+  { title: "Clients", icon: Users, path: "/clients" },
   { title: "Revenue", icon: DollarSign, path: "/revenue" },
   { title: "Support", icon: MessageSquare, path: "/support" },
   { title: "Server Health", icon: Globe, path: "/servers" },
@@ -25,8 +26,8 @@ export function Sidebar() {
             <Shield className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gradient-cyber">CyberGuard</h1>
-            <p className="text-xs text-muted-foreground font-mono">Security Command</p>
+            <h1 className="text-xl font-bold text-gradient-cyber">QStellar</h1>
+            <p className="text-xs text-muted-foreground font-mono">Enterprise Platform</p>
           </div>
         </div>
       </div>

@@ -43,9 +43,9 @@ export default function Login() {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold">
-            <span className="text-gradient-cyber">CyberGuard</span>
+            <span className="text-gradient-cyber">QStellar</span>
           </CardTitle>
-          <CardDescription>Global Security Command Center</CardDescription>
+          <CardDescription>Enterprise Management Platform</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -55,7 +55,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@cyberguard.com"
+                placeholder="admin@qstellar.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-background/50"
