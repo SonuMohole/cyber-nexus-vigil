@@ -152,7 +152,7 @@ export default function Dashboard() {
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
         <h3 className="text-2xl font-bold text-primary tracking-tight">
-          ₹24.8M
+          $24.8M
         </h3>
       </div>
     </div>

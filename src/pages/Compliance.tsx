@@ -61,40 +61,64 @@ export default function Compliance() {
           </div>
 
           {/* Compliance Standards */}
-          <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <ClipboardList className="h-5 w-5 text-primary" />
-                Compliance Standards Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {complianceStandards.map((standard, index) => (
-                <div
-                  key={index}
-                  className="p-4 rounded-xl border border-border/40 bg-gradient-to-r from-card/40 to-card/20 hover:from-primary/5 hover:to-card/30 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{standard.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Valid until: {standard.validUntil}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(standard.status)} variant="outline">
-                      {standard.status}
-                    </Badge>
-                  </div>
-                  <Progress value={standard.progress} className="h-2" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+         <Card className="glass-panel shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl border border-gray-200/60 dark:border-gray-800/50">
+  <CardHeader className="pb-2">
+    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+      <ClipboardList className="h-5 w-5 text-primary" />
+      Compliance Standards Overview
+    </CardTitle>
+    <p className="text-sm text-muted-foreground mt-1">
+      Track and monitor your organization’s security compliance progress
+    </p>
+  </CardHeader>
+
+  <CardContent className="space-y-4 mt-2">
+    {complianceStandards.map((standard, index) => (
+      <div
+        key={index}
+        className="p-4 rounded-xl border border-gray-200/40 dark:border-gray-800/50 
+        bg-gradient-to-r from-white/50 to-gray-50/40 dark:from-[#0f0f0f]/60 dark:to-[#111]/60
+        backdrop-blur-sm hover:shadow-sm transition-all duration-300"
+      >
+        {/* Header Row */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Shield className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-foreground">
+                {standard.name}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Valid until: <span className="font-medium">{standard.validUntil}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Dynamic Badge */}
+          <Badge
+            variant="outline"
+            className={`text-xs px-3 py-1.5 font-medium rounded-full border ${getStatusColor(
+              standard.status
+            )}`}
+          >
+            {standard.status}
+          </Badge>
+        </div>
+
+        {/* Progress Bar with Label */}
+        <div className="flex items-center gap-3">
+          <Progress value={standard.progress} className="h-2 flex-1" />
+          <span className="text-xs font-semibold text-muted-foreground min-w-[36px] text-right">
+            {standard.progress}%
+          </span>
+        </div>
+      </div>
+    ))}
+  </CardContent>
+</Card>
+
 
           {/* Two-column Section */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
