@@ -61,81 +61,129 @@ export default function Revenue() {
           </div>
 
           {/* Revenue Trend Chart */}
-          <Card className="glass-panel">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Revenue Trend Analysis</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">Export CSV</Button>
-                <Button variant="outline" size="sm">Export PDF</Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={monthlyRevenue}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }} 
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={3}
-                    name="Total Revenue"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="endpoint" 
-                    stroke="hsl(var(--accent))" 
-                    strokeWidth={2}
-                    name="Endpoint"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="network" 
-                    stroke="hsl(var(--success))" 
-                    strokeWidth={2}
-                    name="Network"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <Card className="glass-panel border border-border/40 shadow-lg hover:shadow-xl transition-all duration-300">
+  <CardHeader className="flex flex-row items-center justify-between">
+    <div>
+      <CardTitle className="text-lg font-semibold flex items-center gap-2">
+        📊 Revenue Trend Analysis
+      </CardTitle>
+      <p className="text-sm text-muted-foreground mt-1">
+        Monthly performance comparison across all products
+      </p>
+    </div>
+
+    <div className="flex gap-2">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="hover:bg-primary/10 hover:text-primary transition-all"
+      >
+        Export CSV
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="hover:bg-primary/10 hover:text-primary transition-all"
+      >
+        Export PDF
+      </Button>
+    </div>
+  </CardHeader>
+
+  <CardContent>
+    <div className="h-[420px] w-full bg-gradient-to-br from-card/30 via-card/20 to-card/10 rounded-xl p-4">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart 
+          data={monthlyRevenue} 
+          margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+        >
+          <defs>
+            {/* subtle line gradients for each category */}
+            <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+            </linearGradient>
+            <linearGradient id="endpointGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.1} />
+            </linearGradient>
+            <linearGradient id="networkGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.1} />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid 
+            strokeDasharray="4 4" 
+            stroke="hsl(var(--border))" 
+            opacity={0.4}
+          />
+          <XAxis 
+            dataKey="month" 
+            stroke="hsl(var(--muted-foreground))" 
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis 
+            stroke="hsl(var(--muted-foreground))" 
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: "hsl(var(--popover))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "8px",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+            }}
+            labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 500 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: "10px" }}
+            iconType="circle"
+          />
+
+          {/* Total Revenue Line */}
+          <Line 
+            type="monotone" 
+            dataKey="total" 
+            stroke="url(#totalGradient)"
+            strokeWidth={3}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+            name="Total Revenue"
+          />
+
+          {/* Endpoint Line */}
+          <Line 
+            type="monotone" 
+            dataKey="endpoint" 
+            stroke="url(#endpointGradient)"
+            strokeWidth={2.5}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+            name="Endpoint"
+          />
+
+          {/* Network Line */}
+          <Line 
+            type="monotone" 
+            dataKey="network" 
+            stroke="url(#networkGradient)"
+            strokeWidth={2.5}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+            name="Network"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  </CardContent>
+</Card>
+
 
           {/* Product Revenue Breakdown */}
-          <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Product Revenue Segmentation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyRevenue}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }} 
-                  />
-                  <Legend />
-                  <Bar dataKey="endpoint" stackId="a" fill="hsl(var(--primary))" name="Endpoint Protection" />
-                  <Bar dataKey="network" stackId="a" fill="hsl(var(--accent))" name="Network Security" />
-                  <Bar dataKey="cloud" stackId="a" fill="hsl(var(--success))" name="Cloud Security" />
-                  <Bar dataKey="identity" stackId="a" fill="hsl(var(--warning))" name="Identity Mgmt" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+      
 
           {/* Top Clients by Revenue */}
           <Card className="glass-panel">

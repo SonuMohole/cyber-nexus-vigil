@@ -43,12 +43,12 @@ export default function Support() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar />
-      
+
       <main className="flex-1 ml-64">
         <DashboardHeader />
-        
-        <div className="p-8 space-y-6 animate-fade-in">
-          {/* Support Metrics */}
+
+        <div className="p-8 space-y-8 animate-fade-in">
+          {/* Top Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
               title="Open Tickets"
@@ -76,56 +76,67 @@ export default function Support() {
             />
           </div>
 
-          <Tabs defaultValue="tickets" className="space-y-6">
-            <TabsList className="glass-panel">
-              <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
-              <TabsTrigger value="feedback">Client Feedback</TabsTrigger>
+          {/* Tabs Section */}
+          <Tabs defaultValue="tickets" className="space-y-8">
+            <TabsList className="glass-panel border border-border/40 p-1 rounded-xl">
+              <TabsTrigger value="tickets" className="w-1/2 rounded-lg data-[state=active]:bg-primary/10">
+                Support Tickets
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="w-1/2 rounded-lg data-[state=active]:bg-primary/10">
+                Client Feedback
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="tickets" className="space-y-4">
-              <Card className="glass-panel">
+            {/* Support Tickets */}
+            <TabsContent value="tickets">
+              <Card className="glass-panel border border-border/40">
                 <CardHeader>
-                  <CardTitle>Active Support Tickets</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Active Support Tickets</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {tickets.map((ticket) => (
-                      <div key={ticket.id} className="p-4 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-all cursor-pointer">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono font-semibold text-primary">{ticket.id}</span>
-                            <Badge className={getPriorityColor(ticket.priority)} variant="outline">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              {ticket.priority}
-                            </Badge>
-                            <Badge className={getStatusColor(ticket.status)} variant="outline">
-                              {ticket.status}
-                            </Badge>
-                          </div>
-                          <span className="text-sm text-muted-foreground">{ticket.time}</span>
+                <CardContent className="space-y-4">
+                  {tickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="p-4 rounded-xl border border-border/40 bg-gradient-to-r from-card/40 to-card/20 hover:from-primary/5 hover:to-card/30 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-primary font-semibold">{ticket.id}</span>
+                          <Badge className={getPriorityColor(ticket.priority)} variant="outline">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            {ticket.priority}
+                          </Badge>
+                          <Badge className={getStatusColor(ticket.status)} variant="outline">
+                            {ticket.status}
+                          </Badge>
                         </div>
-                        <h4 className="font-semibold mb-1">{ticket.subject}</h4>
-                        <p className="text-sm text-muted-foreground">{ticket.client}</p>
+                        <span className="text-sm text-muted-foreground">{ticket.time}</span>
                       </div>
-                    ))}
-                  </div>
+                      <h4 className="font-semibold text-lg">{ticket.subject}</h4>
+                      <p className="text-sm text-muted-foreground">{ticket.client}</p>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="feedback" className="space-y-4">
-              <Card className="glass-panel">
+            {/* Client Feedback */}
+            <TabsContent value="feedback">
+              <Card className="glass-panel border border-border/40">
                 <CardHeader>
-                  <CardTitle>Recent Client Feedback</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Recent Client Feedback</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {feedback.map((item) => (
-                      <div key={item.id} className="p-4 rounded-lg border border-border/50 bg-card/30">
-                        <div className="flex items-start justify-between mb-3">
+                      <div
+                        key={item.id}
+                        className="p-5 rounded-xl border border-border/40 bg-gradient-to-br from-card/40 to-card/20 hover:from-primary/5 hover:to-card/30 transition-all duration-300 shadow-sm hover:shadow-md"
+                      >
+                        <div className="flex items-center justify-between mb-3">
                           <div>
                             <p className="font-semibold">{item.client}</p>
-                            <p className="text-sm text-muted-foreground">{item.date}</p>
+                            <p className="text-xs text-muted-foreground">{item.date}</p>
                           </div>
                           <div className="flex gap-1">
                             {[...Array(5)].map((_, i) => (
@@ -138,7 +149,7 @@ export default function Support() {
                             ))}
                           </div>
                         </div>
-                        <p className="text-sm">{item.comment}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.comment}</p>
                       </div>
                     ))}
                   </div>

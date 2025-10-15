@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MetricCard } from "@/components/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, CheckCircle, AlertTriangle, FileText, Download, Upload } from "lucide-react";
+import { Shield, CheckCircle, AlertTriangle, FileText, Download, Upload, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -47,140 +47,137 @@ export default function Compliance() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar />
-      
+
       <main className="flex-1 ml-64">
         <DashboardHeader />
-        
-        <div className="p-8 space-y-6 animate-fade-in">
-          {/* Compliance Metrics */}
+
+        <div className="p-8 space-y-8 animate-fade-in">
+          {/* Top Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
-              title="Certifications"
-              value="3"
-              icon={Shield}
-            />
-            <MetricCard
-              title="Compliance Score"
-              value="92%"
-              icon={CheckCircle}
-              trend={{ value: 5.2, isPositive: true }}
-            />
-            <MetricCard
-              title="Pending Audits"
-              value="2"
-              icon={AlertTriangle}
-            />
-            <MetricCard
-              title="Documents"
-              value="24"
-              icon={FileText}
-            />
+            <MetricCard title="Certifications" value="3" icon={Shield} />
+            <MetricCard title="Compliance Score" value="92%" icon={CheckCircle} trend={{ value: 5.2, isPositive: true }} />
+            <MetricCard title="Pending Audits" value="2" icon={AlertTriangle} />
+            <MetricCard title="Documents" value="24" icon={FileText} />
           </div>
 
           {/* Compliance Standards */}
           <Card className="glass-panel">
             <CardHeader>
-              <CardTitle>Compliance Standards Overview</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                Compliance Standards Overview
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {complianceStandards.map((standard, index) => (
-                  <div key={index} className="p-4 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Shield className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">{standard.name}</p>
-                          <p className="text-sm text-muted-foreground">Valid until: {standard.validUntil}</p>
-                        </div>
+            <CardContent className="space-y-4">
+              {complianceStandards.map((standard, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-xl border border-border/40 bg-gradient-to-r from-card/40 to-card/20 hover:from-primary/5 hover:to-card/30 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Shield className="h-5 w-5 text-primary" />
                       </div>
-                      <Badge className={getStatusColor(standard.status)} variant="outline">
-                        {standard.status}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Completion</span>
-                        <span className="font-mono font-semibold">{standard.progress}%</span>
+                      <div>
+                        <p className="font-semibold">{standard.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Valid until: {standard.validUntil}
+                        </p>
                       </div>
-                      <Progress value={standard.progress} className="h-2" />
                     </div>
+                    <Badge className={getStatusColor(standard.status)} variant="outline">
+                      {standard.status}
+                    </Badge>
                   </div>
-                ))}
-              </div>
+                  <Progress value={standard.progress} className="h-2" />
+                </div>
+              ))}
             </CardContent>
           </Card>
 
-          {/* Documents and Audit Log */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="glass-panel">
+          {/* Two-column Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Documents */}
+            <Card className="glass-panel border border-border/40 hover:shadow-md transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Policy Documents</CardTitle>
-                <Button variant="outline" size="sm">
-                  <Upload className="h-4 w-4 mr-2" />
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Policy Documents
+                </CardTitle>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Upload className="h-4 w-4" />
                   Upload
                 </Button>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {documents.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-all">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <div>
-                          <p className="font-medium text-sm">{doc.name}</p>
-                          <p className="text-xs text-muted-foreground">{doc.type} · {doc.size} · {doc.date}</p>
-                        </div>
+              <CardContent className="space-y-3">
+                {documents.map((doc, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border/40 bg-gradient-to-r from-card/40 to-card/20 hover:from-accent/5 hover:to-card/30 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="font-medium">{doc.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {doc.type} · {doc.size} · {doc.date}
+                        </p>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
                     </div>
-                  ))}
-                </div>
+                    <Button variant="ghost" size="icon">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </CardContent>
             </Card>
 
-            <Card className="glass-panel">
+            {/* Audit Log */}
+            <Card className="glass-panel border border-border/40 hover:shadow-md transition-all duration-300">
               <CardHeader>
-                <CardTitle>Audit Activity Log</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Audit Activity Log
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {auditLog.map((log) => (
-                    <div key={log.id} className="p-3 rounded-lg border border-border/50 bg-card/30">
-                      <p className="font-medium text-sm mb-1">{log.action}</p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{log.user}</span>
-                        <span>{log.date}</span>
-                      </div>
+              <CardContent className="space-y-3">
+                {auditLog.map((log) => (
+                  <div
+                    key={log.id}
+                    className="p-3 rounded-lg border border-border/40 bg-card/30 hover:bg-primary/5 transition-all"
+                  >
+                    <p className="font-medium text-sm mb-1">{log.action}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{log.user}</span>
+                      <span>{log.date}</span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
 
-          {/* Compliance Alerts */}
-          <Card className="glass-panel border-warning/20">
+          {/* Alerts */}
+          <Card className="glass-panel border-warning/20 hover:shadow-md transition-all duration-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-warning">
                 <AlertTriangle className="h-5 w-5 text-warning" />
                 Upcoming Compliance Deadlines
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
-                  <p className="font-medium text-sm">NIST CSF Assessment due in 45 days</p>
-                  <p className="text-xs text-muted-foreground mt-1">Complete remaining 22% of framework controls</p>
-                </div>
-                <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
-                  <p className="font-medium text-sm">HIPAA Compliance Review scheduled</p>
-                  <p className="text-xs text-muted-foreground mt-1">External audit begins in 60 days</p>
-                </div>
+            <CardContent className="space-y-3">
+              <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
+                <p className="font-medium text-sm">NIST CSF Assessment due in 45 days</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Complete remaining 22% of framework controls
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <p className="font-medium text-sm">HIPAA Compliance Review scheduled</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  External audit begins in 60 days
+                </p>
               </div>
             </CardContent>
           </Card>

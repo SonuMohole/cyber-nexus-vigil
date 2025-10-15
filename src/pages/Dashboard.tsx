@@ -90,37 +90,95 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle>Product Distribution</CardTitle>
-              </CardHeader>
-              <CardContent className="flex items-center justify-center">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={productData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {productData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: "hsl(var(--card))", 
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px"
-                      }} 
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+           
+                      <Card className="glass-panel border border-border/40 shadow-md hover:shadow-lg transition-all duration-300">
+  <CardHeader className="flex flex-row items-center justify-between">
+    <div>
+      <CardTitle className="text-lg font-semibold flex items-center gap-2">
+        🧭 Product Distribution
+      </CardTitle>
+      <p className="text-sm text-muted-foreground mt-1">
+        Share of revenue across core product lines
+      </p>
+    </div>
+  </CardHeader>
+
+  <CardContent className="flex flex-col items-center justify-center">
+    <div className="relative w-full h-[320px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <defs>
+            {/* gradient glow for pie edges */}
+            <radialGradient id="pieGlow" cx="50%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="white" stopOpacity={0.2} />
+              <stop offset="100%" stopColor="hsl(var(--border))" stopOpacity={0.1} />
+            </radialGradient>
+          </defs>
+
+          <Pie
+            data={productData}
+            cx="50%"
+            cy="50%"
+            innerRadius={70}
+            outerRadius={110}
+            paddingAngle={3}
+            dataKey="value"
+            stroke="url(#pieGlow)"
+            strokeWidth={2}
+          >
+            {productData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.color}
+                className="cursor-pointer transition-transform duration-300 hover:scale-105"
+              />
+            ))}
+          </Pie>
+
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "hsl(var(--popover))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "10px",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            }}
+            labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 500 }}
+            itemStyle={{ fontSize: "13px" }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+
+      {/* Center Label */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
+        <h3 className="text-2xl font-bold text-primary tracking-tight">
+          ₹24.8M
+        </h3>
+      </div>
+    </div>
+
+    {/* Legend Section */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 w-full px-4">
+      {productData.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <div
+            className="h-3 w-3 rounded-full"
+            style={{ backgroundColor: item.color }}
+          />
+          <div>
+            <p className="text-sm font-medium">{item.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {item.value.toLocaleString()} units
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </CardContent>
+</Card>
+
+
+
           </div>
 
           {/* Recent Clients Table */}

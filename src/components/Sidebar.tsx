@@ -22,9 +22,14 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen w-64 glass-panel border-r border-border/50 flex flex-col">
       <div className="p-6 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-            <Shield className="h-6 w-6 text-primary-foreground" />
-          </div>
+              <div className="h-14 w-14 rounded-lg  from-primary to-primary-glow flex items-center justify-center">
+      <img
+        src="/QST logo.png"
+        alt="Logo"
+        className="h-14 w-14 object-contain rounded"
+      />
+    </div>
+
           <div>
             <h1 className="text-xl font-bold text-gradient-cyber">QStellar</h1>
             <p className="text-xs text-muted-foreground font-mono">Enterprise Platform</p>
