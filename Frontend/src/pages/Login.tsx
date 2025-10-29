@@ -6,26 +6,69 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebase/firebaseConfig";  // ✅ Firebase instance
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaChecked, setCaptchaChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!captchaChecked) {
       toast.error("Please verify you're not a robot");
       return;
     }
 
-    if (email && password) {
-      toast.success("Login successful!");
-      navigate("/dashboard");
-    } else {
+    if (!email || !password) {
       toast.error("Please enter your credentials");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1️⃣ Firebase authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2️⃣ Get Firebase ID token (the correct one)
+      const idToken = await user.getIdToken();
+
+      // 3️⃣ Send token to backend for verification + role check
+      const res = await fetch("http://localhost:5000/api/auth/verify-user", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Verification failed with backend");
+      }
+
+
+      // 4️⃣ Check user role (e.g., only super_admin allowed)
+     const data = await res.json();
+console.log("✅ Backend Response:", data); // <-- Add this line for debugging
+
+// ✅ Fix: check the nested user.role
+if (data.user?.role === "super_admin") {
+  toast.success("Welcome Super Admin 🚀");
+  navigate("/dashboard");
+} else {
+  toast.error("Access denied: insufficient privileges");
+}
+
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      toast.error(error.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,19 +76,15 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iaHNsKHZhcigtLXByaW1hcnkpKSIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20" />
-
-      <Card className="w-full max-w-md glass-panel border-border/50 relative z-10 animate-fade-in">
+      <Card className="w-full max-w-md border-border/50 relative z-10 animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center cyber-glow">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
               <Shield className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">
-            <span className="text-gradient-cyber">QStellar</span>
-          </CardTitle>
-          <CardDescription>Enterprise Management Platform</CardDescription>
+          <CardTitle className="text-3xl font-bold text-gradient-cyber">QStellar</CardTitle>
+          <CardDescription>Secure Enterprise Login</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -89,13 +128,9 @@ export default function Login() {
               </label>
             </div>
 
-            <Button type="submit" variant="cyber" className="w-full">
-              Sign In Securely
+            <Button type="submit" variant="cyber" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In Securely"}
             </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              Protected by enterprise-grade encryption
-            </p>
           </form>
         </CardContent>
       </Card>

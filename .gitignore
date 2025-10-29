@@ -1,24 +1,88 @@
-# Logs
-logs
+# ========================================================
+# 🚀 QSTELLAR GLOBAL DASHBOARD - CLEAN .gitignore
+# ========================================================
+
+# ------------------------------
+# ⚙️ Node & Build Outputs
+# ------------------------------
+node_modules/
+dist/
+build/
+.vite/
+.cache/
+coverage/
+.nyc_output/
+.temp/
+logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ------------------------------
+# ⚙️ TypeScript & Build Artifacts
+# ------------------------------
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
+# ------------------------------
+# ⚙️ Environment Files (only main)
+# ------------------------------
+.env
+
+# ------------------------------
+# ⚙️ Firebase / Secrets / Certificates
+# ------------------------------
+firebase-service-account.json
+firebase-adminsdk*.json
+*.pem
+*.key
+*.crt
+*.p12
+*.serviceAccount.json
+*.private.json
+secret_*.json
+private_*.json
+
+# ------------------------------
+# ⚙️ Frontend (React + Vite)
+# ------------------------------
+frontend/dist/
+frontend/.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# ------------------------------
+# ⚙️ Backend (Node + Express + PostgreSQL)
+# ------------------------------
+Backend/dist/
+Backend/node_modules/
+Backend/*.log
+Backend/firebase-service-account.json
+
+# ------------------------------
+# ⚙️ IDE / Editor Configurations
+# ------------------------------
+.vscode/
+.idea/
+*.iml
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+
+# ------------------------------
+# ⚙️ System / OS Files
+# ------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+Icon?
+*.tmp
+*.temp
+
+# ------------------------------
+# ⚙️ Miscellaneous
+# ------------------------------
+uploads/
+uploads_temp/
+temp/
+tmp/
