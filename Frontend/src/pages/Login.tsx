@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield } from "lucide-react";
 import { toast } from "sonner";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase/firebaseConfig"; // ✅ Firebase instance
+import { auth } from "@/firebase/firebaseConfig";
 
 declare global {
   interface Window {
@@ -21,7 +21,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Hardcoded reCAPTCHA key (for testing)
+  // 🧩 Hardcoded for now — can move to .env.local later
   const RECAPTCHA_SITE_KEY = "6LeLy_orAAAAAM15A0G5RFcCsZDBY9-vZyYPEsya";
   const BACKEND_URL = "http://localhost:5000";
 
@@ -51,15 +51,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // 🧩 Step 1: Get reCAPTCHA token
-      if (!window.grecaptcha) {
-        throw new Error("reCAPTCHA not loaded yet. Please refresh the page.");
-      }
-
+      // 🧩 Step 1: Generate reCAPTCHA token
+      if (!window.grecaptcha) throw new Error("reCAPTCHA not ready yet.");
       const recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
-      console.log("✅ reCAPTCHA token generated:", recaptchaToken.substring(0, 25) + "...");
+      console.log("✅ reCAPTCHA token:", recaptchaToken.substring(0, 25) + "...");
 
-      // 🧩 Step 2: Verify reCAPTCHA with backend
+      // 🧩 Step 2: Verify reCAPTCHA on backend
       const captchaRes = await fetch(`${BACKEND_URL}/api/auth/verify-captcha`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,7 +65,6 @@ export default function Login() {
 
       const captchaData = await captchaRes.json();
       console.log("🧾 Backend CAPTCHA Response:", captchaData);
-
       if (!captchaData.success) {
         toast.error("Captcha verification failed ❌");
         setLoading(false);
@@ -80,25 +76,28 @@ export default function Login() {
       const user = userCredential.user;
       const idToken = await user.getIdToken();
 
-      // 🧩 Step 4: Verify user with backend
+      // 🧩 Step 4: Verify role with backend (Manual login only)
       const res = await fetch(`${BACKEND_URL}/api/auth/verify-user`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${idToken}` },
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "X-Login-Intent": "true", // 🚨 Marks this as manual login
+        },
       });
 
       const data = await res.json();
       console.log("✅ Backend Verify-User Response:", data);
 
       // 🧩 Step 5: Redirect based on role
-      if (data.user?.role === "super_admin") {
+      if (res.ok && data.user?.role === "super_admin") {
         toast.success("Welcome Super Admin 🚀");
         navigate("/dashboard");
       } else {
-        toast.error("Access denied: insufficient privileges");
+        toast.error(data.message || "Access denied");
       }
-    } catch (error: any) {
-      console.error("💥 Login Error:", error);
-      toast.error(error.message || "Login failed");
+    } catch (err: any) {
+      console.error("💥 Login Error:", err);
+      toast.error(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -106,9 +105,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-
       <Card className="w-full max-w-md border-border/50 relative z-10 animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
