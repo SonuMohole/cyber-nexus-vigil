@@ -15,6 +15,10 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
+// 🧱 New 2FA Pages
+import TwoFASetup from "@/pages/TwoFASetup";
+import TwoFAVerify from "@/pages/TwoFAVerify";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -23,12 +27,17 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+
         <BrowserRouter>
           <Routes>
-            {/* Public */}
+            {/* 🌐 Public Routes */}
             <Route path="/" element={<Login />} />
 
-            {/* Protected */}
+            {/* 🔐 Two-Factor Authentication Routes */}
+            <Route path="/2fa-setup" element={<TwoFASetup />} />
+            <Route path="/2fa-verify" element={<TwoFAVerify />} />
+
+            {/* 🛡️ Protected Routes */}
             <Route
               path="/dashboard"
               element={
@@ -77,6 +86,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+
+            {/* 🚧 Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
