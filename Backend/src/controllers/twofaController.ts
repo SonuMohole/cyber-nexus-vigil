@@ -94,7 +94,7 @@ export const verify2FA = async (req: Request, res: Response) => {
     }
 
     // ✅ If already enabled, just verify for login
-    console.log(`✅ 2FA verified for login UID: ${firebaseUid}`);
+    // console.log(`✅ 2FA verified for login UID: ${firebaseUid}`);
     return res.json({ success: true, message: "2FA verified successfully ✅" });
   } catch (error: any) {
     console.error("💥 [2FA Verification Error]", error.message);
