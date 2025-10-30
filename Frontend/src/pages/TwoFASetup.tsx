@@ -48,7 +48,7 @@ export default function TwoFASetup() {
     };
 
     fetchQRCode();
-  }, []);
+  }, [navigate]);
 
   // 🧩 Step 2: Verify the 6-digit code entered by user
   const handleVerify = async () => {
@@ -60,7 +60,13 @@ export default function TwoFASetup() {
     setLoading(true);
     try {
       const user = auth.currentUser;
-      const idToken = await user?.getIdToken();
+      if (!user) {
+        toast.error("Session expired. Please log in again.");
+        navigate("/");
+        return;
+      }
+
+      const idToken = await user.getIdToken();
 
       const res = await fetch(`${BACKEND_URL}/api/2fa/verify`, {
         method: "POST",
@@ -97,7 +103,7 @@ export default function TwoFASetup() {
           {qrCode ? (
             <div className="flex flex-col items-center">
               <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 mb-4" />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-2">
                 Scan this QR code with your Authenticator app.
               </p>
             </div>
@@ -115,6 +121,17 @@ export default function TwoFASetup() {
             />
             <Button onClick={handleVerify} className="w-full" disabled={loading}>
               {loading ? "Verifying..." : "Verify & Enable 2FA"}
+            </Button>
+          </div>
+
+          {/* 🚪 Optional button to go back to login */}
+          <div className="pt-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/")}
+              className="w-full text-sm font-medium"
+            >
+              ← Back to Login
             </Button>
           </div>
         </CardContent>

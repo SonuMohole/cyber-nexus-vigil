@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,15 @@ export default function TwoFAVerify() {
   const navigate = useNavigate();
   const BACKEND_URL = "http://localhost:5000";
 
+  // 🧠 Redirect to login if user session is invalid
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error("Session expired. Please log in again.");
+      navigate("/");
+    }
+  }, [navigate]);
+
   const handleVerify = async () => {
     if (!token.trim()) {
       toast.error("Please enter your 6-digit code.");
@@ -21,7 +30,13 @@ export default function TwoFAVerify() {
     setLoading(true);
     try {
       const user = auth.currentUser;
-      const idToken = await user?.getIdToken();
+      if (!user) {
+        toast.error("Session expired. Please log in again.");
+        navigate("/");
+        return;
+      }
+
+      const idToken = await user.getIdToken();
 
       const res = await fetch(`${BACKEND_URL}/api/2fa/verify`, {
         method: "POST",
@@ -65,6 +80,17 @@ export default function TwoFAVerify() {
           <Button onClick={handleVerify} className="w-full" disabled={loading}>
             {loading ? "Verifying..." : "Verify & Continue"}
           </Button>
+
+          {/* 🚪 Back to login button */}
+          <div className="pt-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/")}
+              className="w-full text-sm font-medium"
+            >
+              ← Back to Login
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
