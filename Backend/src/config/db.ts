@@ -1,29 +1,4 @@
-// import pkg from "pg";
-// import dotenv from "dotenv";
-
-// dotenv.config();
-
-// const { Pool } = pkg;
-
-// export const pool = new Pool({
-//   user: process.env.PGUSER,
-//   password: process.env.PGPASSWORD,
-//   host: process.env.PGHOST,
-//   port: Number(process.env.PGPORT),
-//   database: process.env.PGDATABASE,
-// });
-
-// pool
-//   .connect()
-//   .then(() => console.log(`✅ Connected to PostgreSQL DB: ${process.env.PGDATABASE}`))
-//   .catch((err) => {
-//     console.error("❌ PostgreSQL Connection Error");
-//     console.error("Host:", process.env.PGHOST);
-//     console.error("User:", process.env.PGUSER);
-//     console.error("DB:", process.env.PGDATABASE);
-//     console.error("Error Message:", err.message);
-//     console.error("Full Error:", err);
-//   });
+// Backend\src\config\db.ts
 
 import pkg from "pg";
 import dotenv from "dotenv";
@@ -41,11 +16,11 @@ interface DBConfig {
 }
 
 const config: DBConfig = {
-  user: process.env.PGUSER ?? "postgres",
+  user: process.env.PGUSER ?? "",
   password: process.env.PGPASSWORD ?? "",
   host: process.env.PGHOST ?? "localhost",
   port: Number(process.env.PGPORT ?? 5432),
-  database: process.env.PGDATABASE ?? "qstellar_global",
+  database: process.env.PGDATABASE ?? "",
 };
 
 export const pool = new Pool(config);
