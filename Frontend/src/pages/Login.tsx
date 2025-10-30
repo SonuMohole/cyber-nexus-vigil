@@ -1,190 +1,10 @@
-
-// // Login.tsx
-
-// import { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Shield } from "lucide-react";
-// import { toast } from "sonner";
-// import { signInWithEmailAndPassword } from "firebase/auth";
-// import { auth } from "@/firebase/firebaseConfig";
-
-// declare global {
-//   interface Window {
-//     grecaptcha: any;
-//   }
-// }
-
-// export default function Login() {
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const navigate = useNavigate();
-
-//   // 🧩 Ideally move these to .env.local later
-//   const RECAPTCHA_SITE_KEY = "6LeLy_orAAAAAM15A0G5RFcCsZDBY9-vZyYPEsya";
-//   const BACKEND_URL = "http://localhost:5000";
-
-//   // ✅ Load reCAPTCHA v3 once
-//   useEffect(() => {
-//     const scriptId = "recaptcha-v3-script";
-//     if (!document.getElementById(scriptId)) {
-//       const script = document.createElement("script");
-//       script.id = scriptId;
-//       script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
-//       script.async = true;
-//       script.defer = true;
-//       document.body.appendChild(script);
-//       script.onload = () => console.log("✅ reCAPTCHA v3 script loaded");
-//       script.onerror = () => console.error("❌ Failed to load reCAPTCHA v3 script");
-//     }
-//   }, []);
-
-//   const handleLogin = async (e: React.FormEvent) => {
-//     e.preventDefault();
-
-//     if (!email || !password) {
-//       toast.error("Please enter your credentials");
-//       return;
-//     }
-
-//     setLoading(true);
-
-//     try {
-//       // 🧠 Step 1: Get reCAPTCHA token
-//       if (!window.grecaptcha) throw new Error("reCAPTCHA not ready yet.");
-//       const recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
-//       console.log("✅ reCAPTCHA token:", recaptchaToken.substring(0, 25) + "...");
-
-//       // 🧠 Step 2: Verify reCAPTCHA token via backend
-//       const captchaRes = await fetch(`${BACKEND_URL}/api/auth/verify-captcha`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ token: recaptchaToken }),
-//       });
-
-//       const captchaData = await captchaRes.json();
-//       console.log("🧾 Backend CAPTCHA Response:", captchaData);
-
-//       if (!captchaData.success) {
-//         toast.error("Captcha verification failed ❌");
-//         setLoading(false);
-//         return;
-//       }
-
-//       // 🔐 Step 3: Sign in via Firebase
-//       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-//       const user = userCredential.user;
-//       const idToken = await user.getIdToken();
-
-//       // 🧩 Step 4: Verify with backend and check 2FA status
-//       const res = await fetch(`${BACKEND_URL}/api/auth/verify-user`, {
-//         method: "GET",
-//         headers: {
-//           Authorization: `Bearer ${idToken}`,
-//           "X-Login-Intent": "true",
-//         },
-//       });
-
-//       const data = await res.json();
-//       console.log("✅ Backend Verify-User Response:", data);
-
-//       if (!res.ok) {
-//         toast.error(data.message || "Access denied");
-//         return;
-//       }
-
-//       // 🧩 Step 5: Role & 2FA handling
-//       const role = data.user?.role;
-//       const is2FAEnabled = data.user?.twofa_enabled;
-
-//       if (role === "super_admin") {
-//         if (!is2FAEnabled) {
-//           toast.info("Please complete 2FA setup to continue.");
-//           navigate("/2fa-setup");
-//         } else {
-//           toast.success("Welcome Super Admin 🚀");
-//           navigate("/dashboard");
-//         }
-//       } else {
-//         toast.error("Access restricted to Super Admin only.");
-//       }
-
-//     } catch (err: any) {
-//       console.error("💥 Login Error:", err);
-//       toast.error(err.message || "Login failed");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-//       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-//       <Card className="w-full max-w-md border-border/50 relative z-10 animate-fade-in">
-//         <CardHeader className="text-center">
-//           <div className="flex justify-center mb-4">
-//             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-//               <Shield className="h-8 w-8 text-primary-foreground" />
-//             </div>
-//           </div>
-//           <CardTitle className="text-3xl font-bold text-gradient-cyber">QStellar</CardTitle>
-//           <CardDescription>Secure Enterprise Login</CardDescription>
-//         </CardHeader>
-
-//         <CardContent>
-//           <form onSubmit={handleLogin} className="space-y-4">
-//             <div className="space-y-2">
-//               <Label htmlFor="email">Email</Label>
-//               <Input
-//                 id="email"
-//                 type="email"
-//                 placeholder="admin@qstellar.com"
-//                 value={email}
-//                 onChange={(e) => setEmail(e.target.value)}
-//                 className="bg-background/50"
-//               />
-//             </div>
-
-//             <div className="space-y-2">
-//               <Label htmlFor="password">Password</Label>
-//               <Input
-//                 id="password"
-//                 type="password"
-//                 placeholder="••••••••"
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//                 className="bg-background/50"
-//               />
-//             </div>
-
-//             <Button type="submit" variant="cyber" className="w-full" disabled={loading}>
-//               {loading ? "Verifying..." : "Sign In Securely"}
-//             </Button>
-
-//             <p className="text-xs text-center text-muted-foreground">
-//               Protected by Google reCAPTCHA v3
-//             </p>
-//           </form>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// }
-
-// Login.tsx
-// (unchanged imports)
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield } from "lucide-react";
-import { toast } from "sonner";
+import { Shield, Info, CheckCircle2, AlertTriangle } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
 
@@ -198,6 +18,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
   const navigate = useNavigate();
 
   const RECAPTCHA_SITE_KEY = "6LeLy_orAAAAAM15A0G5RFcCsZDBY9-vZyYPEsya";
@@ -215,17 +36,28 @@ export default function Login() {
     }
   }, []);
 
+  // Auto-clear transient messages (like info/success)
+  useEffect(() => {
+    if (status && (status.type === "info" || status.type === "success")) {
+      const timer = setTimeout(() => setStatus(null), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !password) {
-      toast.error("Please enter your credentials");
+      setStatus({ type: "error", text: "Please enter both email and password." });
       return;
     }
 
     setLoading(true);
+    setStatus(null); // clear previous message while verifying
+
     try {
-      // Step 1: reCAPTCHA
-      if (!window.grecaptcha) throw new Error("reCAPTCHA not ready yet.");
+      // Step 1: Verify reCAPTCHA
+      if (!window.grecaptcha) throw new Error("reCAPTCHA not ready.");
       const recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
 
       const captchaRes = await fetch(`${BACKEND_URL}/api/auth/verify-captcha`, {
@@ -236,7 +68,8 @@ export default function Login() {
 
       const captchaData = await captchaRes.json();
       if (!captchaData.success) {
-        toast.error("Captcha verification failed ❌");
+        setStatus({ type: "error", text: "Security validation failed. Please retry." });
+        setLoading(false);
         return;
       }
 
@@ -245,7 +78,7 @@ export default function Login() {
       const user = userCredential.user;
       const idToken = await user.getIdToken();
 
-      // Step 3: Verify user with backend
+      // Step 3: Backend verification
       const res = await fetch(`${BACKEND_URL}/api/auth/verify-user`, {
         method: "GET",
         headers: {
@@ -253,68 +86,124 @@ export default function Login() {
           "X-Login-Intent": "true",
         },
       });
-      const data = await res.json();
 
+      const data = await res.json();
       if (!res.ok) {
-        toast.error(data.message || "Access denied");
+        setStatus({ type: "error", text: data.message || "Access denied. Contact administrator." });
+        setLoading(false);
         return;
       }
 
       const role = data.user?.role;
       const is2FAEnabled = data.user?.twofa_enabled;
 
-     if (role === "super_admin") {
-  console.log("🧠 2FA status received from backend:", is2FAEnabled);
-  if (is2FAEnabled === false) {
-    toast.info("2FA setup required. Redirecting...");
-    navigate("/2fa-setup");
-  } else if (is2FAEnabled === true) {
-    toast.info("2FA verification required. Redirecting...");
-    navigate("/2fa-verify");
-  } else {
-    toast.warning("2FA status unknown. Redirecting to setup for safety.");
-    navigate("/2fa-setup");
-  }
-}
-
+      // Step 4: Handle 2FA redirection
+      if (role === "super_admin") {
+        if (is2FAEnabled === false) {
+          setStatus({ type: "info", text: "Two-factor setup required. Redirecting..." });
+          setTimeout(() => navigate("/2fa-setup"), 1200);
+        } else if (is2FAEnabled === true) {
+          setStatus({ type: "success", text: "Authentication successful. Redirecting to verification..." });
+          setTimeout(() => navigate("/2fa-verify"), 1200);
+        } else {
+          setStatus({ type: "error", text: "Unexpected 2FA state. Please try again." });
+        }
+      } else {
+        setStatus({ type: "error", text: "Access restricted to Super Admins only." });
+      }
     } catch (err: any) {
-      toast.error(err.message || "Login failed");
       console.error("Login Error:", err);
+      setStatus({
+        type: "error",
+        text: "Unable to sign in. Please verify your credentials and network connection.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const renderStatusMessage = () => {
+    if (!status) return null;
+
+    // ⛔️ Hide info messages while loading (we already show “Verifying...” on button)
+    if (loading && status.type === "info") return null;
+
+    const icon =
+      status.type === "error" ? (
+        <AlertTriangle className="h-4 w-4 text-red-600" />
+      ) : status.type === "success" ? (
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+      ) : (
+        <Info className="h-4 w-4 text-blue-600" />
+      );
+
+    const classes =
+      status.type === "error"
+        ? "border-red-300 bg-red-50/80 text-red-700"
+        : status.type === "success"
+        ? "border-green-300 bg-green-50/80 text-green-700"
+        : "border-blue-300 bg-blue-50/80 text-blue-700";
+
+    return (
+      <div
+        className={`flex items-center justify-center gap-2 mt-3 px-4 py-2 text-sm font-medium rounded-md border ${classes} transition-all duration-300`}
+      >
+        {icon}
+        <span>{status.text}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-      <Card className="w-full max-w-md border-border/50 relative z-10 animate-fade-in">
+
+      <Card className="w-full max-w-md border-border/50 relative z-10 shadow-xl animate-fade-in backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-md">
               <Shield className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-gradient-cyber">QStellar</CardTitle>
-          <CardDescription>Secure Enterprise Login</CardDescription>
+          <CardTitle className="text-3xl font-bold text-gradient-cyber tracking-tight">QStellar</CardTitle>
+          <CardDescription className="text-muted-foreground text-sm mt-1">
+            Secure Enterprise Access
+          </CardDescription>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="admin@qstellar.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@qstellar.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-background/50 focus:ring-2 focus:ring-primary/30 transition-all"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-background/50 focus:ring-2 focus:ring-primary/30 transition-all"
+              />
             </div>
 
-            <Button type="submit" variant="cyber" className="w-full" disabled={loading}>
+            <Button type="submit" variant="cyber" className="w-full mt-2" disabled={loading}>
               {loading ? "Verifying..." : "Sign In Securely"}
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
+            {renderStatusMessage()}
+
+            <p className="text-xs text-center text-muted-foreground pt-2">
               Protected by Google reCAPTCHA v3
             </p>
           </form>
