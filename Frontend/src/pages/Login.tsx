@@ -21,10 +21,10 @@ export default function Login() {
   const [status, setStatus] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
   const navigate = useNavigate();
 
-  // ✅ Read from .env.local
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string;
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
 
+  // 🧠 Load reCAPTCHA script
   useEffect(() => {
     const scriptId = "recaptcha-v3-script";
     if (!document.getElementById(scriptId)) {
@@ -37,7 +37,7 @@ export default function Login() {
     }
   }, [RECAPTCHA_SITE_KEY]);
 
-  // Auto-clear transient messages (like info/success)
+  // ✨ Auto-clear transient messages
   useEffect(() => {
     if (status && (status.type === "info" || status.type === "success")) {
       const timer = setTimeout(() => setStatus(null), 2500);
@@ -45,6 +45,7 @@ export default function Login() {
     }
   }, [status]);
 
+  // 🔐 Handle Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -57,7 +58,7 @@ export default function Login() {
     setStatus(null);
 
     try {
-      // Step 1: Verify reCAPTCHA
+      // Step 1️⃣: Verify reCAPTCHA
       if (!window.grecaptcha) throw new Error("reCAPTCHA not ready.");
       const recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
 
@@ -74,12 +75,12 @@ export default function Login() {
         return;
       }
 
-      // Step 2: Firebase login
+      // Step 2️⃣: Firebase login
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
 
-      // Step 3: Backend verification
+      // Step 3️⃣: Verify user in backend (Firestore role + 2FA status)
       const res = await fetch(`${BACKEND_URL}/api/auth/verify-user`, {
         method: "GET",
         headers: {
@@ -98,6 +99,22 @@ export default function Login() {
       const role = data.user?.role;
       const is2FAEnabled = data.user?.twofa_enabled;
 
+      // ✅ Step 4️⃣: Update login timestamp (only after successful verification)
+      if (res.ok && data.status === "success") {
+        try {
+          await fetch(`${BACKEND_URL}/api/auth/update-login-time`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (err) {
+          console.warn("⚠️ Failed to update login timestamp:", err);
+        }
+      }
+
+      // Step 5️⃣: Navigate based on 2FA setup
       if (role === "super_admin") {
         if (!is2FAEnabled) {
           setStatus({ type: "info", text: "Two-factor setup required. Redirecting..." });
@@ -112,7 +129,7 @@ export default function Login() {
         setStatus({ type: "error", text: "Access restricted to Super Admins only." });
       }
     } catch (err: any) {
-      console.error("Login Error:", err);
+      console.error("💥 Login Error:", err);
       setStatus({
         type: "error",
         text: "Unable to sign in. Please verify your credentials and network connection.",
@@ -122,6 +139,7 @@ export default function Login() {
     }
   };
 
+  // 🎨 Status Message UI
   const renderStatusMessage = () => {
     if (!status) return null;
     if (loading && status.type === "info") return null;
@@ -152,6 +170,7 @@ export default function Login() {
     );
   };
 
+  // 🧩 Render UI
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />

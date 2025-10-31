@@ -1,9 +1,9 @@
 // 📁 Backend/src/controllers/authController.ts
 import { Request, Response } from "express";
-import { pool } from "../config/db";
+import admin from "../config/firebase";
 
 /**
- * 🔐 Verify Firebase User + PostgreSQL Role + 2FA Status
+ * 🔐 Verify Firebase User + Firestore Role + 2FA Status
  */
 export const verifyUser = async (req: Request, res: Response) => {
   const isManualLogin = req.headers["x-login-intent"] === "true";
@@ -21,32 +21,25 @@ export const verifyUser = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const firebaseUid = user.uid;
+    const db = admin.firestore();
+    const userDoc = await db.collection("users").doc(user.uid).get();
 
-    const result = await pool.query(
-      `SELECT email, role, status, full_name, twofa_enabled 
-       FROM admin_users 
-       WHERE firebase_uid = $1`,
-      [firebaseUid]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "User not found in database" });
+    if (!userDoc.exists) {
+      return res.status(404).json({ message: "User not found in Firestore" });
     }
 
-    const adminData = result.rows[0];
-    const twofaEnabled = Boolean(adminData.twofa_enabled);
+    const adminData = userDoc.data();
+    const twofaEnabled = !!adminData?.twofa_enabled;
 
-    if (adminData.status !== "active") {
+    if (adminData?.status !== "active") {
       return res.status(403).json({ message: "Account suspended" });
     }
 
-    if (adminData.role !== "super_admin") {
+    if (adminData?.role !== "super_admin") {
       return res.status(403).json({ message: "Access restricted to super_admin only" });
     }
 
-    // ✅ Success Log (no sensitive info)
-    console.log("✅ Super Admin verified successfully!");
+    console.log(`✅ Super Admin verified successfully for UID: ${user.uid}`);
 
     return res.status(200).json({
       status: "success",
@@ -59,6 +52,28 @@ export const verifyUser = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
+    console.error("🔥 Firestore verifyUser error:", error.message);
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * 🕒 Update last login timestamp securely
+ */
+export const updateLoginTime = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const db = admin.firestore();
+    const userRef = db.collection("users").doc(user.uid);
+
+    await userRef.update({
+      last_login: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log(`🕒 Updated last_login for UID: ${user.uid}`);
+    return res.json({ success: true, message: "Login timestamp updated" });
+  } catch (error: any) {
+    console.error("🔥 Error updating login timestamp:", error.message);
+    return res.status(500).json({ message: "Error updating login timestamp" });
   }
 };
