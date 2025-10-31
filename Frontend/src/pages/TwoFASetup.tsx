@@ -26,7 +26,8 @@ export default function TwoFASetup() {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const BACKEND_URL = "http://localhost:5000";
+  
+   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
 
   // 🧭 Auto-clear error after 3 seconds
   useEffect(() => {

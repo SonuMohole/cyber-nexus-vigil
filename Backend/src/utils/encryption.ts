@@ -1,24 +1,23 @@
 import crypto from "crypto";
 
-const ENCRYPTION_KEY = process.env.TWOFA_ENCRYPT_KEY || ""; // 32 chars
+const ALGORITHM = "aes-256-cbc";
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || ""; // 32 bytes
 const IV_LENGTH = 16;
-
-
-// MySecretKey1234567890123456
 
 export const encrypt = (text: string): string => {
   const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), iv);
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return iv.toString("hex") + ":" + encrypted;
+  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return iv.toString("hex") + ":" + encrypted.toString("hex");
 };
 
-export const decrypt = (encryptedText: string): string => {
-  const [ivHex, encrypted] = encryptedText.split(":");
+export const decrypt = (text: string): string => {
+  const [ivHex, encryptedHex] = text.split(":");
   const iv = Buffer.from(ivHex, "hex");
-  const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), iv);
-  let decrypted = decipher.update(encrypted, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
+  const encryptedText = Buffer.from(encryptedHex, "hex");
+  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
 };

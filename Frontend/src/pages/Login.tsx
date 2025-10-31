@@ -21,8 +21,9 @@ export default function Login() {
   const [status, setStatus] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
   const navigate = useNavigate();
 
-  const RECAPTCHA_SITE_KEY = "6LeLy_orAAAAAM15A0G5RFcCsZDBY9-vZyYPEsya";
-  const BACKEND_URL = "http://localhost:5000";
+  // ✅ Read from .env.local
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string;
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
 
   useEffect(() => {
     const scriptId = "recaptcha-v3-script";
@@ -34,7 +35,7 @@ export default function Login() {
       script.defer = true;
       document.body.appendChild(script);
     }
-  }, []);
+  }, [RECAPTCHA_SITE_KEY]);
 
   // Auto-clear transient messages (like info/success)
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function Login() {
     }
 
     setLoading(true);
-    setStatus(null); // clear previous message while verifying
+    setStatus(null);
 
     try {
       // Step 1: Verify reCAPTCHA
@@ -97,9 +98,8 @@ export default function Login() {
       const role = data.user?.role;
       const is2FAEnabled = data.user?.twofa_enabled;
 
-      // Step 4: Handle 2FA redirection
       if (role === "super_admin") {
-        if (is2FAEnabled === false) {
+        if (!is2FAEnabled) {
           setStatus({ type: "info", text: "Two-factor setup required. Redirecting..." });
           setTimeout(() => navigate("/2fa-setup"), 1200);
         } else if (is2FAEnabled === true) {
@@ -124,8 +124,6 @@ export default function Login() {
 
   const renderStatusMessage = () => {
     if (!status) return null;
-
-    // ⛔️ Hide info messages while loading (we already show “Verifying...” on button)
     if (loading && status.type === "info") return null;
 
     const icon =

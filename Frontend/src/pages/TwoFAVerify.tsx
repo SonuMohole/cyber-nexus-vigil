@@ -12,7 +12,7 @@ export default function TwoFAVerify() {
   const [shake, setShake] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-  const BACKEND_URL = "http://localhost:5000";
+   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
 
   // 🧭 Redirect if session invalid
   useEffect(() => {
