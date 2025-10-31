@@ -5,12 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Info, CheckCircle2, AlertTriangle } from "lucide-react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, User } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
+
+interface StatusMessage {
+  type: "info" | "error" | "success";
+  text: string;
+}
 
 declare global {
   interface Window {
-    grecaptcha: any;
+    grecaptcha?: {
+      execute: (key: string, opts: { action: string }) => Promise<string>;
+    };
   }
 }
 
@@ -18,13 +25,13 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
+  const [status, setStatus] = useState<StatusMessage | null>(null);
   const navigate = useNavigate();
 
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string;
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
 
-  // 🧠 Load reCAPTCHA script
+  // 🧠 Load reCAPTCHA script once
   useEffect(() => {
     const scriptId = "recaptcha-v3-script";
     if (!document.getElementById(scriptId)) {
@@ -40,13 +47,13 @@ export default function Login() {
   // ✨ Auto-clear transient messages
   useEffect(() => {
     if (status && (status.type === "info" || status.type === "success")) {
-      const timer = setTimeout(() => setStatus(null), 2500);
+      const timer = setTimeout(() => setStatus(null), 2200);
       return () => clearTimeout(timer);
     }
   }, [status]);
 
-  // 🔐 Handle Login
-  const handleLogin = async (e: React.FormEvent) => {
+  // 🔐 Handle Login Securely
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -55,11 +62,11 @@ export default function Login() {
     }
 
     setLoading(true);
-    setStatus(null);
+    setStatus({ type: "info", text: "Verifying credentials..." });
 
     try {
-      // Step 1️⃣: Verify reCAPTCHA
-      if (!window.grecaptcha) throw new Error("reCAPTCHA not ready.");
+      // Step 1️⃣: reCAPTCHA
+      if (!window.grecaptcha) throw new Error("reCAPTCHA not initialized");
       const recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
 
       const captchaRes = await fetch(`${BACKEND_URL}/api/auth/verify-captcha`, {
@@ -68,20 +75,19 @@ export default function Login() {
         body: JSON.stringify({ token: recaptchaToken }),
       });
 
-      const captchaData = await captchaRes.json();
+      const captchaData: { success: boolean } = await captchaRes.json();
       if (!captchaData.success) {
         setStatus({ type: "error", text: "Security validation failed. Please retry." });
-        setLoading(false);
         return;
       }
 
       // Step 2️⃣: Firebase login
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const user: User = userCredential.user;
       const idToken = await user.getIdToken();
 
-      // Step 3️⃣: Verify user in backend (Firestore role + 2FA status)
-      const res = await fetch(`${BACKEND_URL}/api/auth/verify-user`, {
+      // Step 3️⃣: Backend verification
+      const verifyRes = await fetch(`${BACKEND_URL}/api/auth/verify-user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -89,60 +95,49 @@ export default function Login() {
         },
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setStatus({ type: "error", text: data.message || "Access denied. Contact administrator." });
-        setLoading(false);
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        setStatus({ type: "error", text: verifyData.message || "Access denied. Contact administrator." });
         return;
       }
 
-      const role = data.user?.role;
-      const is2FAEnabled = data.user?.twofa_enabled;
+      const { role, twofa_enabled } = verifyData.user || {};
 
-      // ✅ Step 4️⃣: Update login timestamp (only after successful verification)
-      if (res.ok && data.status === "success") {
-        try {
-          await fetch(`${BACKEND_URL}/api/auth/update-login-time`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${idToken}`,
-              "Content-Type": "application/json",
-            },
-          });
-        } catch (err) {
-          console.warn("⚠️ Failed to update login timestamp:", err);
-        }
-      }
+      // Step 4️⃣: Update login timestamp (non-blocking)
+      fetch(`${BACKEND_URL}/api/auth/update-login-time`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+      }).catch(() => console.warn("⚠️ Failed to update login timestamp"));
 
-      // Step 5️⃣: Navigate based on 2FA setup
+      // Step 5️⃣: Redirect flow
       if (role === "super_admin") {
-        if (!is2FAEnabled) {
+        if (!twofa_enabled) {
           setStatus({ type: "info", text: "Two-factor setup required. Redirecting..." });
-          setTimeout(() => navigate("/2fa-setup"), 1200);
-        } else if (is2FAEnabled === true) {
-          setStatus({ type: "success", text: "Authentication successful. Redirecting to verification..." });
-          setTimeout(() => navigate("/2fa-verify"), 1200);
+          setTimeout(() => navigate("/2fa-setup"), 1000);
         } else {
-          setStatus({ type: "error", text: "Unexpected 2FA state. Please try again." });
+          setStatus({ type: "success", text: "Verified. Redirecting to 2FA..." });
+          setTimeout(() => navigate("/2fa-verify"), 1000);
         }
       } else {
         setStatus({ type: "error", text: "Access restricted to Super Admins only." });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("💥 Login Error:", err);
       setStatus({
         type: "error",
-        text: "Unable to sign in. Please verify your credentials and network connection.",
+        text: "Login failed. Check credentials or try again later.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // 🎨 Status Message UI
+  // 🎨 Status message display
   const renderStatusMessage = () => {
     if (!status) return null;
-    if (loading && status.type === "info") return null;
 
     const icon =
       status.type === "error" ? (
@@ -170,11 +165,9 @@ export default function Login() {
     );
   };
 
-  // 🧩 Render UI
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-
       <Card className="w-full max-w-md border-border/50 relative z-10 shadow-xl animate-fade-in backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -187,7 +180,6 @@ export default function Login() {
             Secure Enterprise Access
           </CardDescription>
         </CardHeader>
-
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
@@ -201,7 +193,6 @@ export default function Login() {
                 className="bg-background/50 focus:ring-2 focus:ring-primary/30 transition-all"
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -213,13 +204,10 @@ export default function Login() {
                 className="bg-background/50 focus:ring-2 focus:ring-primary/30 transition-all"
               />
             </div>
-
             <Button type="submit" variant="cyber" className="w-full mt-2" disabled={loading}>
               {loading ? "Verifying..." : "Sign In Securely"}
             </Button>
-
             {renderStatusMessage()}
-
             <p className="text-xs text-center text-muted-foreground pt-2">
               Protected by Google reCAPTCHA v3
             </p>

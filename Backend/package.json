@@ -13,10 +13,12 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.13.1",
+    "check-disk-space": "^3.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "firebase-admin": "^12.6.0",
+    "node-os-utils": "^2.0.1",
     "pg": "^8.11.3",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0"

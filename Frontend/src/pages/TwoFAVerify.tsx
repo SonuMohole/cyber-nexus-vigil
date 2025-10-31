@@ -5,27 +5,34 @@ import { auth } from "@/firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 
+// ✅ Strong typing for API response
+interface VerifyResponse {
+  success?: boolean;
+  message?: string;
+}
+
 export default function TwoFAVerify() {
-  const [otp, setOtp] = useState(Array(6).fill(""));
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [shake, setShake] = useState(false);
+  const [shake, setShake] = useState<boolean>(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
 
-  // 🧭 Redirect if session invalid
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string;
+
+  // 🧭 Session Validation
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
-      setError("Your session has ended. Please sign in again.");
+      setError("Your session has expired. Please sign in again.");
       setTimeout(() => navigate("/"), 2000);
     }
   }, [navigate]);
 
-  // Handle OTP input
+  // 🧠 Handle OTP Input — auto-focus, digit validation, and navigation
   const handleChange = (value: string, index: number) => {
-    if (/^[0-9]?$/.test(value)) {
+    if (/^\d?$/.test(value)) {
       const updated = [...otp];
       updated[index] = value;
       setOtp(updated);
@@ -40,10 +47,12 @@ export default function TwoFAVerify() {
     }
   };
 
-  const handleVerify = async () => {
-    const token = otp.join("");
-    if (token.length < 6) {
-      setError("Please enter your 6-digit verification code.");
+  // 🔐 Handle Verification Securely
+  const handleVerify = async (): Promise<void> => {
+    const token = otp.join("").trim();
+
+    if (!/^\d{6}$/.test(token)) {
+      setError("Please enter a valid 6-digit verification code.");
       return;
     }
 
@@ -54,33 +63,38 @@ export default function TwoFAVerify() {
     try {
       const user = auth.currentUser;
       if (!user) {
-        setError("Your session has ended. Redirecting...");
+        setError("Session expired. Redirecting...");
         setTimeout(() => navigate("/"), 1500);
         return;
       }
 
-      const idToken = await user.getIdToken();
+      const idToken = await user.getIdToken(/* forceRefresh */ true);
+
       const res = await fetch(`${BACKEND_URL}/api/2fa/verify`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${idToken}`,
           "Content-Type": "application/json",
+          "X-Request-Scope": "verify-2fa",
         },
         body: JSON.stringify({ token }),
       });
 
-      const data = await res.json();
+      const data: VerifyResponse = await res.json();
 
-      if (res.ok) {
-        // 🕓 Add slight delay for animation smoothness
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+      // ✅ On Success
+      if (res.ok && data.success) {
+        await new Promise((resolve) => setTimeout(resolve, 800)); // smooth animation
         navigate("/dashboard");
       } else {
-        setError("The verification code is incorrect. Please try again.");
+        // ⚠️ Delay to mitigate brute-force timing
+        await new Promise((resolve) => setTimeout(resolve, 400 + Math.random() * 400));
+        setError(data.message || "Invalid or expired 2FA code. Try again.");
         setShake(true);
       }
-    } catch {
-      setError("Something went wrong. Please try again shortly.");
+    } catch (err) {
+      console.error("💥 2FA Verification Error:", err);
+      setError("Verification failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -92,9 +106,7 @@ export default function TwoFAVerify() {
 
       <Card className="w-full max-w-md border-border/50 relative z-10 animate-fade-in shadow-xl">
         <CardHeader className="text-center space-y-1">
-          <CardTitle className="text-3xl font-bold text-gradient-cyber">
-            Verify Access
-          </CardTitle>
+          <CardTitle className="text-3xl font-bold text-gradient-cyber">Verify Access</CardTitle>
           <CardDescription>
             Enter the 6-digit code from your Authenticator app to confirm your identity.
           </CardDescription>
@@ -110,12 +122,14 @@ export default function TwoFAVerify() {
               Authenticator Code
             </h3>
 
-            {/* OTP Fields */}
+            {/* 🔢 OTP Input Fields */}
             <div className="flex justify-center space-x-3 mb-4">
               {otp.map((digit, index) => (
                 <input
                   key={index}
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleChange(e.target.value, index)}
@@ -123,12 +137,12 @@ export default function TwoFAVerify() {
                   ref={(el) => (inputRefs.current[index] = el)}
                   className="w-12 h-12 text-center text-lg font-semibold border rounded-md 
                              focus:ring-2 focus:ring-primary focus:border-primary outline-none 
-                             transition-all bg-white/95 shadow-sm"
+                             transition-all bg-white/95 shadow-sm select-none"
                 />
               ))}
             </div>
 
-            {/* Professional Error */}
+            {/* ⚠️ Error Display */}
             {error && (
               <div
                 className="flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-md 
@@ -140,10 +154,10 @@ export default function TwoFAVerify() {
               </div>
             )}
 
-            {/* Verify Button with smooth loader motion */}
+            {/* 🔘 Verify Button */}
             <Button
               onClick={handleVerify}
-              className={`w-full mt-5 flex items-center justify-center gap-2 transition-all duration-500 ease-in-out ${
+              className={`w-full mt-5 flex items-center justify-center gap-2 transition-all duration-500 ease-in-out font-medium ${
                 loading
                   ? "bg-primary/80 cursor-not-allowed scale-[0.99] shadow-inner opacity-90"
                   : "hover:scale-[1.02] shadow-md"
@@ -162,7 +176,7 @@ export default function TwoFAVerify() {
             </Button>
           </div>
 
-          {/* Back to login */}
+          {/* 🔙 Back to Login */}
           <Button
             variant="outline"
             onClick={() => navigate("/")}
