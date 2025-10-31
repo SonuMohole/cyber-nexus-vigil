@@ -30,5 +30,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   
   // 🧠 Start real-time system monitor (every 5 seconds)
-  startSystemMonitor(2000);
+  startSystemMonitor(1000);
 });

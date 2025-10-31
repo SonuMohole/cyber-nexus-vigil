@@ -164,6 +164,7 @@ All colors MUST be HSL.
 
 /* In your main.css or globals.css */
 
+/* 🩸 Add in globals.css */
 @keyframes pulse-critical {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 76, 76, 0.4); }
   50% { box-shadow: 0 0 15px 6px rgba(255, 76, 76, 0.5); }
@@ -172,9 +173,5 @@ All colors MUST be HSL.
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.4); }
   50% { box-shadow: 0 0 15px 6px rgba(255, 200, 0, 0.5); }
 }
-.animate-pulse-critical {
-  animation: pulse-critical 2s infinite;
-}
-.animate-pulse-warning {
-  animation: pulse-warning 3s infinite;
-}
+.animate-pulse-critical { animation: pulse-critical 2s infinite; }
+.animate-pulse-warning { animation: pulse-warning 3s infinite; }
